@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Baixar o app — Taverna na Combie</title>
+<meta name="theme-color" content="#12062a">
+<link rel="icon" href="/van.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/style.css">
+<style>
+  .dl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 10px; }
+  .dl-card h2 { font-family: var(--pixel); font-size: 14px; margin: 0 0 10px; }
+  .dl-card .big-ico { font-family: var(--pixel); font-size: 34px; color: var(--accent-hi); margin-bottom: 12px; text-shadow: 3px 3px 0 var(--black); }
+  .dl-card ol { color: var(--muted); padding-left: 22px; margin: 16px 0 0; }
+  .dl-card.mine { border-color: var(--green); box-shadow: 8px 8px 0 var(--black), 0 0 22px rgba(57,255,136,.35); }
+  .dl-card .tag-mine { display: none; font-family: var(--pixel); font-size: 8px; color: var(--black); background: var(--green); padding: 4px 8px; margin-left: 8px; vertical-align: middle; }
+  .dl-card.mine .tag-mine { display: inline-block; }
+  @media (max-width: 880px) { .dl-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header>
+  <a class="logo" href="/"><img src="/van.svg" alt="" width="40" height="40" style="image-rendering:pixelated"><b>TAVERNA <span>NA COMBIE</span></b></a>
+  <div class="tag"><a class="btn small" href="/">◀ Voltar ao site</a></div>
+</header>
+<main>
+  <div class="hero">
+    <h1>BAIXE O <span>APP</span></h1>
+    <p>Instale e abra com um clique. As novidades do site chegam sozinhas no app.</p>
+  </div>
+  <p class="form-ok hidden" id="inApp" style="text-align:center">✔ Você já está usando o app!</p>
+  <div class="dl-grid">
+    <div class="pixel-card dl-card" id="cardWin">
+      <div class="big-ico">⊞</div>
+      <h2>WINDOWS <span class="tag-mine">SEU SISTEMA</span></h2>
+      <p style="color:var(--muted);margin:0 0 18px">Transmita e assista. Windows 10 e 11.</p>
+      <a class="btn primary big block" id="dlWin" href="https://github.com/leoaltoe-dot/taverna-na-combie/releases/latest/download/Taverna-na-Combie-Setup.exe">⬇ Baixar instalador</a>
+      <ol>
+        <li>Abra o arquivo baixado: ele instala e já abre o app.</li>
+        <li>Se aparecer "O Windows protegeu o computador", clique em <b>Mais informações → Executar assim mesmo</b>.</li>
+        <li>O atalho fica na Área de Trabalho e no Menu Iniciar.</li>
+      </ol>
+    </div>
+    <div class="pixel-card dl-card" id="cardAndroid">
+      <div class="big-ico">▣</div>
+      <h2>ANDROID <span class="tag-mine">SEU SISTEMA</span></h2>
+      <p style="color:var(--muted);margin:0 0 18px">Assista às transmissões com tela cheia e janela flutuante. Android 7 ou mais novo.</p>
+      <a class="btn primary big block" id="dlAndroid" href="https://github.com/leoaltoe-dot/taverna-na-combie/releases/latest/download/Taverna-na-Combie.apk">⬇ Baixar APK</a>
+      <ol>
+        <li>Abra o arquivo baixado e toque em <b>Instalar</b>.</li>
+        <li>Se pedir, permita "instalar apps desta fonte" para o navegador.</li>
+        <li>Para transmitir a tela, use o computador.</li>
+      </ol>
+    </div>
+  </div>
+</main>
+<footer class="site-footer">
+  <span>Criado por <b>Leonardo Altoe</b></span>
+  <a href="https://github.com/leoaltoe-dot" target="_blank" rel="noopener"><span aria-hidden="true">&lt;/&gt;</span> GitHub: leoaltoe-dot</a>
+</footer>
+<script>
+  const ua = navigator.userAgent;
+  if (/TavernaApp/.test(ua) || window.tavernaApp) document.getElementById('inApp').classList.remove('hidden');
+  if (/Android/i.test(ua)) document.getElementById('cardAndroid').classList.add('mine');
+  else if (/Windows/i.test(ua)) document.getElementById('cardWin').classList.add('mine');
+</script>
+</body>
+</html>
