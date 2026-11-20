@@ -67,6 +67,10 @@ public class MainActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false);
+        // A página não precisa ler arquivos do aparelho nem conteúdo de outros apps.
+        s.setAllowFileAccess(false);
+        s.setAllowContentAccess(false);
+        s.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
         s.setUserAgentString(s.getUserAgentString() + " TavernaApp/Android/" + appVersion());
         web.addJavascriptInterface(new Bridge(), "TavernaAndroid");
         CookieManager.getInstance().setAcceptCookie(true);
@@ -92,7 +96,11 @@ public class MainActivity extends Activity {
 
             @Override
             public void onPermissionRequest(final PermissionRequest request) {
-                runOnUiThread(() -> request.grant(request.getResources()));
+                // Só o site da Taverna pode pedir algo (ex.: vídeo protegido); qualquer outro é recusado.
+                runOnUiThread(() -> {
+                    if (isOurHost(request.getOrigin())) request.grant(request.getResources());
+                    else request.deny();
+                });
             }
         });
 
@@ -124,6 +132,9 @@ public class MainActivity extends Activity {
     }
 
     private void openExternal(Uri u) {
+        // Só links da web saem para o navegador (nada de intent:, file:, content: etc.).
+        String sc = u == null ? null : u.getScheme();
+        if (!"https".equalsIgnoreCase(sc) && !"http".equalsIgnoreCase(sc)) return;
         try {
             startActivity(new Intent(Intent.ACTION_VIEW, u));
         } catch (Exception ignored) {
@@ -168,8 +179,19 @@ public class MainActivity extends Activity {
         web.evaluateJavascript("window.tavernaUpdateProgress && window.tavernaUpdateProgress(" + pct + ")", null);
     }
 
+    /** Só aceita o APK publicado nas versões do próprio projeto no GitHub. */
+    private static boolean validUpdateUrl(String url) {
+        if (url == null || !url.startsWith(UPDATE_PREFIX) || url.contains("..") || url.contains("\\")
+                || url.toLowerCase().matches(".*%(2e|2f|5c).*")) return false;
+        Uri u = Uri.parse(url);
+        String path = u.getPath();
+        return "https".equals(u.getScheme()) && "github.com".equals(u.getHost()) && u.getQuery() == null
+                && u.getFragment() == null && path != null && path.startsWith("/leoaltoe-dot/taverna-na-combie/releases/download/")
+                && path.endsWith(".apk");
+    }
+
     private void startUpdateDownload(String url) {
-        if (url == null || !url.startsWith(UPDATE_PREFIX) || !url.endsWith(".apk") || downloadId != -1) return;
+        if (!validUpdateUrl(url) || downloadId != -1) return;
         try {
             File dir = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
             File apk = new File(dir, "Taverna-na-Combie-update.apk");
