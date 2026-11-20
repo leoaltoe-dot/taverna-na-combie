@@ -1,0 +1,100 @@
+# Monta os apps automaticamente e publica em "Releases":
+#  - Windows: instalador de um clique (instala, cria atalho e abre)
+#  - Android: APK
+# Links fixos para a versão mais nova:
+#  https://github.com/leoaltoe-dot/taverna-na-combie/releases/latest/download/Taverna-na-Combie-Setup.exe
+#  https://github.com/leoaltoe-dot/taverna-na-combie/releases/latest/download/Taverna-na-Combie.apk
+name: Apps (Windows + Android)
+
+on:
+  push:
+    branches: [main]
+    paths: ['desktop/**', 'android/**', 'tools/**', '.github/workflows/apps.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Gerar ícones
+        run: |
+          npm i --prefix tools --no-audit --no-fund @resvg/resvg-js@2
+          node tools/make-icons.cjs
+      - name: Montar instalador
+        working-directory: desktop
+        run: |
+          npm install --no-audit --no-fund
+          npm version 1.0.${{ github.run_number }} --no-git-tag-version
+          npx electron-builder --win nsis --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: desktop/dist/Taverna-na-Combie-Setup.exe
+
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Gerar ícones
+        run: |
+          npm i --prefix tools --no-audit --no-fund @resvg/resvg-js@2
+          node tools/make-icons.cjs
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Chave de assinatura
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: |
+          if [ -n "$KEYSTORE_B64" ]; then
+            echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            echo "KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::Sem chave ANDROID_KEYSTORE_B64: o APK sai assinado com chave temporária."
+          fi
+      - name: Montar APK
+        working-directory: android
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: taverna
+        run: gradle assembleRelease --no-daemon --stacktrace
+      - run: cp android/app/build/outputs/apk/release/app-release.apk Taverna-na-Combie.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: Taverna-na-Combie.apk
+
+  release:
+    needs: [windows, android]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: out
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          tag_name: apps-v1.0.${{ github.run_number }}
+          name: Taverna na Combie — apps v1.0.${{ github.run_number }}
+          body: |
+            **Windows:** baixe `Taverna-na-Combie-Setup.exe`, abra e pronto (instala e abre sozinho).
+            **Android:** baixe `Taverna-na-Combie.apk` e toque em Instalar.
+          make_latest: true
+          files: out/*
