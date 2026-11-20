@@ -1,0 +1,41 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'win.tavernanacombie.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'win.tavernanacombie.app'
+        minSdk 24
+        targetSdk 34
+        versionCode((System.getenv('BUILD_NUMBER') ?: '1').toInteger())
+        versionName "1.0.${System.getenv('BUILD_NUMBER') ?: '1'}"
+    }
+
+    // Assinatura: usa a chave guardada nos "secrets" do GitHub (assim as atualizações instalam por cima).
+    signingConfigs {
+        release {
+            def ks = System.getenv('KEYSTORE_FILE')
+            if (ks) {
+                storeFile file(ks)
+                storePassword System.getenv('KEYSTORE_PASSWORD')
+                keyAlias System.getenv('KEY_ALIAS')
+                keyPassword System.getenv('KEY_PASSWORD')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig System.getenv('KEYSTORE_FILE') ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
