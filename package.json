@@ -1,0 +1,8 @@
+{
+  "name": "taverna-na-combie-site",
+  "private": true,
+  "description": "Site da Taverna na Combie (Cloudflare Workers).",
+  "scripts": { "deploy": "wrangler deploy", "dev": "wrangler dev" },
+  "dependencies": { "qrcode": "^1.5.4" },
+  "devDependencies": { "wrangler": "^4.165.0" }
+}

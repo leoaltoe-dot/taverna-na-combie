@@ -1,0 +1,11 @@
+// Versão online do Taverna na Combie (Cloudflare Workers — plano gratuito).
+// Publicar: npx wrangler deploy  → endereço https://taverna-na-combie.<sua-conta>.workers.dev
+{
+  "name": "taverna-na-combie",
+  "main": "worker/worker.js",
+  "compatibility_date": "2025-10-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": { "directory": "./public", "run_worker_first": ["/ws", "/config", "/qr", "/api/*", "/auth/*"] },
+  "durable_objects": { "bindings": [{ "name": "SIGNAL", "class_name": "Signal" }, { "name": "ACCOUNTS", "class_name": "Accounts" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Signal", "Accounts"] }]
+}
