@@ -38,7 +38,7 @@ jobs:
         working-directory: desktop
         run: |
           New-Item -ItemType Directory -Force native-bin | Out-Null
-          cl /nologo /O2 /EHsc /W3 /DUNICODE /D_UNICODE winaudio.cpp /Fonative-bin\ /Fenative-bin\winaudio.exe /link ole32.lib mmdevapi.lib
+          cl /nologo /O2 /EHsc /W3 /DUNICODE /D_UNICODE winaudio.cpp /Fonative-bin\ /Fenative-bin\winaudio.exe /link ole32.lib mmdevapi.lib user32.lib
           if (!(Test-Path native-bin\winaudio.exe)) { throw 'winaudio.exe não foi gerado' }
       - name: Montar instalador
         working-directory: desktop
