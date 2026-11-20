@@ -4,6 +4,7 @@ const { app, BrowserWindow, desktopCapturer, ipcMain, session, dialog, shell, Me
 const http = require('http');
 const path = require('path');
 const fs = require('fs');
+const { spawn } = require('child_process');
 
 const APP_NAME = 'Taverna na Combie';
 if (!app.requestSingleInstanceLock()) app.quit();
@@ -120,6 +121,43 @@ function googleLogin() {
   });
 }
 
+// ---------- Atualização automática ----------
+// A página avisa que tem versão nova; com a confirmação, baixamos o instalador, abrimos e fechamos o app.
+// O instalador (um clique) troca os arquivos e abre o app de novo já atualizado.
+const UPDATE_PREFIX = 'https://github.com/leoaltoe-dot/taverna-na-combie/releases/download/';
+let updating = false;
+async function installUpdate(url) {
+  if (typeof url !== 'string' || !url.startsWith(UPDATE_PREFIX) || !url.endsWith('.exe')) throw new Error('Endereço de atualização inválido');
+  if (updating) return true;
+  updating = true;
+  try {
+    const res = await fetch(url, { redirect: 'follow' });
+    if (!res.ok || !res.body) throw new Error('Download falhou: ' + res.status);
+    const total = Number(res.headers.get('content-length')) || 0;
+    const file = path.join(app.getPath('temp'), `Taverna-na-Combie-Update-${Date.now()}.exe`);
+    const out = fs.createWriteStream(file);
+    let got = 0, lastPct = -1;
+    const reader = res.body.getReader();
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      got += value.length;
+      if (!out.write(Buffer.from(value))) await new Promise((r) => out.once('drain', r));
+      const pct = total ? Math.floor((got / total) * 100) : 0;
+      if (pct !== lastPct && win && !win.isDestroyed()) { lastPct = pct; win.webContents.send('app:update-progress', pct); }
+    }
+    await new Promise((resolve, reject) => out.end((err) => (err ? reject(err) : resolve())));
+    if (total && got !== total) throw new Error('Download incompleto');
+    if (win && !win.isDestroyed()) win.webContents.send('app:update-progress', 100);
+    spawn(file, [], { detached: true, stdio: 'ignore' }).unref();
+    setTimeout(() => { if (win && !win.isDestroyed()) win.destroy(); app.quit(); }, 800);
+    return true;
+  } catch (e) {
+    updating = false;
+    throw e;
+  }
+}
+
 // ---------- IPC ----------
 ipcMain.handle('app:get-sources', async () => {
   // Busca telas e janelas separadamente: se uma falhar, a outra ainda aparece.
@@ -135,6 +173,8 @@ ipcMain.handle('app:get-sources', async () => {
 });
 ipcMain.handle('app:select-source', (_e, id, audio) => { selectedSourceId = id; selectedAudio = !!audio; return true; });
 ipcMain.handle('app:google-login', () => googleLogin());
+ipcMain.handle('app:install-update', (_e, url) => installUpdate(url));
+ipcMain.on('app:version', (e) => { e.returnValue = app.getVersion(); });
 ipcMain.handle('app:open-setup', () => loadSetup());
 ipcMain.handle('app:get-server', () => serverUrl());
 ipcMain.handle('app:set-server', (_e, url) => {
