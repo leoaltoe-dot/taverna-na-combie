@@ -1,0 +1,35 @@
+{
+  "name": "taverna-na-combie",
+  "productName": "Taverna na Combie",
+  "version": "1.0.0",
+  "description": "Transmita sua tela em 1080p.",
+  "author": "Leonardo Altoe",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^45.4.1",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "win.tavernanacombie.app",
+    "productName": "Taverna na Combie",
+    "copyright": "Leonardo Altoe",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "preload.js", "app/**", "app-config.json", "build/icon.png", "package.json"],
+    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }], "icon": "build/icon.png" },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "Taverna na Combie",
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "Taverna-na-Combie-Setup.${ext}"
+    }
+  }
+}
