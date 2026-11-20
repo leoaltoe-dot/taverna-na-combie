@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Taverna" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">#B026FF</item>
+        <item name="android:colorAccent">#D68CFF</item>
+        <item name="android:statusBarColor">#12062A</item>
+        <item name="android:navigationBarColor">#12062A</item>
+        <item name="android:windowBackground">@android:color/black</item>
+    </style>
+</resources>
