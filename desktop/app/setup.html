@@ -14,9 +14,17 @@
   button { width: 100%; padding: 14px; font: bold 16px Consolas, monospace; letter-spacing: 1px; color: #fff; background: #b026ff; border: 3px solid #d68cff; box-shadow: 4px 4px 0 #07020f; cursor: pointer; }
   button:disabled { opacity: .6; }
   .hidden { display: none; }
+  .titlebar { position: fixed; top: 0; left: 0; right: 0; height: 40px; display: flex; align-items: center; padding: 0 6px 0 14px;
+    background: #12062a; border-bottom: 3px solid #6a2fc0; -webkit-app-region: drag; color: #d68cff; font-weight: bold; letter-spacing: 2px; font-size: 13px; }
+  .titlebar span { flex: 1; }
+  .titlebar button { -webkit-app-region: no-drag; width: 36px; height: 28px; margin-left: 6px; padding: 0; box-shadow: none; font-size: 14px;
+    background: #07020f; border: 2px solid #3d1b72; color: #b9a3d6; }
+  .titlebar button:hover { border-color: #d68cff; color: #fff; }
+  .titlebar button.x:hover { background: #ff4d6d; border-color: #ff4d6d; }
 </style>
 </head>
 <body>
+<div class="titlebar"><span>TAVERNA NA COMBIE</span><button id="wMin" title="Minimizar">_</button><button id="wMax" title="Maximizar">□</button><button id="wClose" class="x" title="Fechar">✕</button></div>
 <div class="card">
   <h1>TAVERNA NA COMBIE</h1>
   <div class="err hidden" id="err"></div>
@@ -26,6 +34,8 @@
 </div>
 <script>
   const $ = (id) => document.getElementById(id);
+  const w = window.tavernaApp.windowControls;
+  if (w) { $('wMin').onclick = w.minimize; $('wMax').onclick = w.toggleMaximize; $('wClose').onclick = w.close; }
   const showErr = (m) => { $('err').textContent = m; $('err').classList.remove('hidden'); };
   window.tavernaApp.getServer().then((u) => { $('url').value = u || 'https://tavernanacombie.win'; });
   $('go').onclick = async () => {
