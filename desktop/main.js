@@ -5,6 +5,7 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
+const os = require('os');
 
 const APP_NAME = 'Taverna na Combie';
 if (!app.requestSingleInstanceLock()) app.quit();
@@ -68,6 +69,10 @@ function createWindow() {
   win.on('maximize', sendState);
   win.on('unmaximize', sendState);
   win.webContents.on('did-finish-load', sendState);
+  // página recarregou/saiu ou janela fechou: para a captura de som da janela
+  win.webContents.on('did-navigate', stopWinAudio);
+  win.webContents.on('render-process-gone', stopWinAudio);
+  win.on('closed', stopWinAudio);
 
   // Entrega a tela escolhida no seletor da página ao getDisplayMedia.
   session.defaultSession.setDisplayMediaRequestHandler(async (_req, callback) => {
@@ -80,6 +85,8 @@ function createWindow() {
         source = sources[0];
       }
       if (!source) return callback({});
+      // Janela + som com o áudio só da janela disponível: o som vem à parte (winaudio.exe), não do PC todo.
+      if (selectedAudio && wantWindow && winAudioSupported()) return callback({ video: source });
       callback(selectedAudio && process.platform === 'win32' ? { video: source, audio: 'loopback' } : { video: source });
     } catch (e) { console.error(e); callback({}); }
   });
@@ -207,6 +214,43 @@ async function installUpdate(url) {
   }
 }
 
+// ---------- Áudio só da janela (Windows 10 2004+) ----------
+// O winaudio.exe (código em winaudio.cpp) captura o som do programa dono da janela escolhida e manda
+// PCM 16-bit 48 kHz estéreo; aqui repassamos para a página, que junta à transmissão.
+const winAudioExe = () => path.join(app.isPackaged ? process.resourcesPath : path.join(__dirname, 'native-bin'), 'winaudio.exe');
+function winAudioSupported() {
+  if (process.platform !== 'win32') return false;
+  const build = Number(String(os.release()).split('.')[2] || 0);
+  return build >= 19041 && fs.existsSync(winAudioExe());
+}
+let winAudioProc = null;
+function stopWinAudio() {
+  const p = winAudioProc;
+  winAudioProc = null;
+  if (p) { try { p.stdin.end(); } catch {} setTimeout(() => { try { p.kill(); } catch {} }, 300); }
+}
+function startWinAudio(wc) {
+  stopWinAudio();
+  const m = /^window:(\d+):/.exec(String(selectedSourceId || ''));
+  if (!m || !selectedAudio || !winAudioSupported()) return Promise.resolve(false);
+  return new Promise((resolve) => {
+    let p;
+    try { p = spawn(winAudioExe(), [m[1]], { stdio: ['pipe', 'pipe', 'ignore'], windowsHide: true }); } catch { return resolve(false); }
+    winAudioProc = p;
+    let rest = Buffer.alloc(0);
+    p.stdout.on('data', (chunk) => {
+      const buf = rest.length ? Buffer.concat([rest, chunk]) : chunk;
+      const usable = buf.length - (buf.length % 4); // amostras inteiras (2 canais x 16 bits)
+      rest = Buffer.from(buf.subarray(usable));
+      if (usable && winAudioProc === p && !wc.isDestroyed()) wc.send('app:win-audio', buf.subarray(0, usable));
+    });
+    const ok = setTimeout(() => resolve(winAudioProc === p), 600);
+    p.on('error', () => { clearTimeout(ok); if (winAudioProc === p) winAudioProc = null; resolve(false); });
+    p.on('exit', () => { clearTimeout(ok); if (winAudioProc === p) winAudioProc = null; resolve(false); });
+  });
+}
+app.on('before-quit', stopWinAudio);
+
 // ---------- IPC ----------
 ipcMain.handle('app:get-sources', async (e) => {
   if (!fromSite(e)) return [];
@@ -221,7 +265,14 @@ ipcMain.handle('app:get-sources', async (e) => {
     .map((s) => ({ id: s.id, name: s.name, kind: s.id.startsWith('screen:') ? 'screen' : 'window',
       thumbnail: s.thumbnail.isEmpty() ? null : s.thumbnail.toDataURL() }));
 });
-ipcMain.handle('app:select-source', (e, id, audio) => { if (!fromSite(e)) return false; selectedSourceId = String(id || ''); selectedAudio = !!audio; return true; });
+ipcMain.handle('app:select-source', (e, id, audio) => {
+  if (!fromSite(e)) return false;
+  selectedSourceId = String(id || ''); selectedAudio = !!audio;
+  // windowAudio: a página vai pedir o som só da janela (em vez do som do PC todo)
+  return { ok: true, windowAudio: selectedAudio && selectedSourceId.startsWith('window:') && winAudioSupported() };
+});
+ipcMain.handle('app:win-audio-start', (e) => (fromSite(e) ? startWinAudio(e.sender) : false));
+ipcMain.handle('app:win-audio-stop', (e) => { if (fromSite(e)) stopWinAudio(); return true; });
 ipcMain.handle('app:google-login', (e) => fromSite(e) && googleLogin());
 ipcMain.on('win:minimize', (e) => fromSite(e) && win && win.minimize());
 ipcMain.on('win:toggle-maximize', (e) => { if (fromSite(e) && win) win.isMaximized() ? win.unmaximize() : win.maximize(); });

@@ -14,6 +14,12 @@ contextBridge.exposeInMainWorld('tavernaApp', {
   onUpdateProgress: (cb) => { ipcRenderer.removeAllListeners('app:update-progress'); ipcRenderer.on('app:update-progress', (_e, p) => cb(p)); },
   getSources: () => ipcRenderer.invoke('app:get-sources'),
   selectSource: (id, audio) => ipcRenderer.invoke('app:select-source', id, audio),
+  // Som só da janela compartilhada (Windows 10 2004+)
+  windowAudio: {
+    start: () => ipcRenderer.invoke('app:win-audio-start'),
+    stop: () => ipcRenderer.invoke('app:win-audio-stop'),
+    onData: (cb) => { ipcRenderer.removeAllListeners('app:win-audio'); ipcRenderer.on('app:win-audio', (_e, chunk) => cb(chunk)); },
+  },
   googleLogin: () => ipcRenderer.invoke('app:google-login'),
   openSetup: () => ipcRenderer.invoke('app:open-setup'),
   getServer: () => ipcRenderer.invoke('app:get-server'),

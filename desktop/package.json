@@ -18,9 +18,29 @@
     "appId": "win.tavernanacombie.app",
     "productName": "Taverna na Combie",
     "copyright": "Leonardo Altoe",
-    "directories": { "output": "dist", "buildResources": "build" },
-    "files": ["main.js", "preload.js", "app/**", "app-config.json", "build/icon.png", "package.json"],
-    "win": { "target": [{ "target": "nsis", "arch": ["x64"] }], "icon": "build/icon.png" },
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "app/**",
+      "app-config.json",
+      "build/icon.png",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
+    },
     "nsis": {
       "oneClick": true,
       "perMachine": false,
@@ -30,6 +50,12 @@
       "shortcutName": "Taverna na Combie",
       "deleteAppDataOnUninstall": false,
       "artifactName": "Taverna-na-Combie-Setup.${ext}"
-    }
+    },
+    "extraResources": [
+      {
+        "from": "native-bin/winaudio.exe",
+        "to": "winaudio.exe"
+      }
+    ]
   }
 }
