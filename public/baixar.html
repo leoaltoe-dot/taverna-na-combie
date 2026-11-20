@@ -5,16 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Baixar o app — Taverna na Combie</title>
 <meta name="theme-color" content="#12062a">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Taverna">
 <link rel="icon" href="/van.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/style.css">
 <style>
-  .dl-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 10px; }
+  .dl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 10px; }
   .dl-card h2 { font-family: var(--pixel); font-size: 14px; margin: 0 0 10px; }
   .dl-card .big-ico { font-family: var(--pixel); font-size: 34px; color: var(--accent-hi); margin-bottom: 12px; text-shadow: 3px 3px 0 var(--black); }
   .dl-card ol { color: var(--muted); padding-left: 22px; margin: 16px 0 0; }
   .dl-card.mine { border-color: var(--green); box-shadow: 8px 8px 0 var(--black), 0 0 22px rgba(57,255,136,.35); }
   .dl-card .tag-mine { display: none; font-family: var(--pixel); font-size: 8px; color: var(--black); background: var(--green); padding: 4px 8px; margin-left: 8px; vertical-align: middle; }
   .dl-card.mine .tag-mine { display: inline-block; }
+  .ios-share { display: inline-block; width: 18px; height: 22px; vertical-align: -4px; }
+  .dl-note { color: var(--yellow); font-size: 19px; margin: 12px 0 0; }
+  @media (max-width: 1060px) { .dl-grid { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 880px) { .dl-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
@@ -52,6 +61,19 @@
         <li>Para transmitir a tela, use o computador.</li>
       </ol>
     </div>
+    <div class="pixel-card dl-card" id="cardIos">
+      <div class="big-ico">▯</div>
+      <h2>IPHONE E IPAD <span class="tag-mine">SEU SISTEMA</span></h2>
+      <p style="color:var(--muted);margin:0 0 18px">Assista às transmissões com ícone na tela de início e tela cheia. Funciona no Safari, sem App Store.</p>
+      <button class="btn primary big block" id="dlIos" type="button">＋ Instalar no iPhone</button>
+      <ol>
+        <li>Abra <b>tavernanacombie.win</b> no <b>Safari</b>.</li>
+        <li>Toque em <b>Compartilhar</b> <svg class="ios-share" viewBox="0 0 18 22" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 14V2M4 6l5-5 5 5M3 10H1v11h16V10h-2"/></svg> (o quadrado com a seta para cima).</li>
+        <li>Escolha <b>Adicionar à Tela de Início</b> e toque em <b>Adicionar</b>.</li>
+        <li>Pronto: abra pelo ícone da Kombi. Para transmitir a tela, use o computador.</li>
+      </ol>
+      <p class="dl-note hidden" id="iosNote"></p>
+    </div>
   </div>
 </main>
 <footer class="site-footer">
@@ -60,9 +82,24 @@
 </footer>
 <script>
   const ua = navigator.userAgent;
-  if (/TavernaApp/.test(ua) || window.tavernaApp) document.getElementById('inApp').classList.remove('hidden');
-  if (/Android/i.test(ua)) document.getElementById('cardAndroid').classList.add('mine');
-  else if (/Windows/i.test(ua)) document.getElementById('cardWin').classList.add('mine');
+  const $ = (id) => document.getElementById(id);
+  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
+  if (/TavernaApp/.test(ua) || window.tavernaApp || standalone) $('inApp').classList.remove('hidden');
+  if (ios) $('cardIos').classList.add('mine');
+  else if (/Android/i.test(ua)) $('cardAndroid').classList.add('mine');
+  else if (/Windows/i.test(ua)) $('cardWin').classList.add('mine');
+
+  function note(msg) { $('iosNote').textContent = msg; $('iosNote').classList.remove('hidden'); }
+  $('dlIos').addEventListener('click', () => {
+    if (!ios) {
+      note('Abra este site no iPhone ou iPad para instalar. Dica: aponte a câmera para o QR code de uma sala ou digite tavernanacombie.win no Safari.');
+      return;
+    }
+    if (standalone) { note('O app já está instalado. Abra pelo ícone da Kombi na tela de início.'); return; }
+    if (/CriOS|FxiOS|EdgiOS/.test(ua)) note('No Chrome/Firefox do iPhone também dá: toque em Compartilhar e depois em Adicionar à Tela de Início. Se não aparecer, abra no Safari.');
+    else note('Agora toque em Compartilhar na barra do Safari e escolha "Adicionar à Tela de Início".');
+  });
 </script>
 </body>
 </html>
