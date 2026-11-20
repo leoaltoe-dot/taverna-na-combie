@@ -13,7 +13,6 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.webkit.JavascriptInterface;
 import android.widget.Toast;
-import androidx.core.content.FileProvider;
 import java.io.File;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -244,7 +243,7 @@ public class MainActivity extends Activity {
             startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES, Uri.parse("package:" + getPackageName())));
             return; // continua no onResume
         }
-        Uri uri = FileProvider.getUriForFile(this, getPackageName() + ".files", pendingApk);
+        Uri uri = ApkProvider.uriFor(this, pendingApk);
         Intent install = new Intent(Intent.ACTION_VIEW)
                 .setDataAndType(uri, "application/vnd.android.package-archive")
                 .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
