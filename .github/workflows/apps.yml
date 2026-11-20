@@ -32,6 +32,14 @@ jobs:
         run: |
           npm i --prefix tools --no-audit --no-fund @resvg/resvg-js@2
           node tools/make-icons.cjs
+      # Programa nativo que captura o som só da janela escolhida (desktop/winaudio.cpp)
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Compilar captura de áudio por janela
+        working-directory: desktop
+        run: |
+          New-Item -ItemType Directory -Force native-bin | Out-Null
+          cl /nologo /O2 /EHsc /W3 /DUNICODE /D_UNICODE winaudio.cpp /Fonative-bin\ /Fenative-bin\winaudio.exe /link ole32.lib mmdevapi.lib
+          if (!(Test-Path native-bin\winaudio.exe)) { throw 'winaudio.exe não foi gerado' }
       - name: Montar instalador
         working-directory: desktop
         run: |
