@@ -14,17 +14,29 @@
 <link rel="icon" href="/van.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/style.css">
 <style>
-  .dl-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-top: 10px; }
-  .dl-card h2 { font-family: var(--pixel); font-size: 14px; margin: 0 0 10px; }
-  .dl-card .big-ico { font-family: var(--pixel); font-size: 34px; color: var(--accent-hi); margin-bottom: 12px; text-shadow: 3px 3px 0 var(--black); }
-  .dl-card ol { color: var(--muted); padding-left: 22px; margin: 16px 0 0; }
-  .dl-card.mine { border-color: var(--green); box-shadow: 8px 8px 0 var(--black), 0 0 22px rgba(57,255,136,.35); }
-  .dl-card .tag-mine { display: none; font-family: var(--pixel); font-size: 8px; color: var(--black); background: var(--green); padding: 4px 8px; margin-left: 8px; vertical-align: middle; }
-  .dl-card.mine .tag-mine { display: inline-block; }
+  /* 3 colunas do mesmo tamanho; cada cartão usa as mesmas linhas (subgrid) para os botões e listas ficarem alinhados */
+  .dl-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: auto; column-gap: 28px; row-gap: 28px; margin-top: 10px; align-items: stretch; }
+  .dl-card { display: grid; grid-row: span 6; grid-template-rows: subgrid; row-gap: 0; align-content: start;
+    transition: transform .12s steps(3), box-shadow .12s steps(3), border-color .12s; animation: pixIn .5s steps(6) backwards; }
+  .dl-card:nth-child(2) { animation-delay: .1s; } .dl-card:nth-child(3) { animation-delay: .2s; }
+  .dl-card:hover { transform: translate(-3px, -3px); box-shadow: 11px 11px 0 var(--black), inset 0 0 0 3px var(--bg2); border-color: var(--accent-hi); }
+  .dl-card .big-ico { font-family: var(--pixel); font-size: 34px; line-height: 1; height: 40px; color: var(--accent-hi); margin-bottom: 14px; text-shadow: 3px 3px 0 var(--black); }
+  .dl-card:hover .big-ico { animation: bob .5s steps(2) infinite; }
+  .dl-card h2 { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-height: 22px; font-family: var(--pixel); font-size: 14px; margin: 0 0 12px; }
+  .dl-card .desc { color: var(--muted); margin: 0 0 18px; }
+  .dl-card .btn { align-self: start; }
+  .dl-card ol { color: var(--muted); padding-left: 22px; margin: 18px 0 0; }
+  .dl-card ol li { margin-bottom: 4px; }
+  .dl-card.mine { border-color: var(--green); box-shadow: 8px 8px 0 var(--black), 0 0 22px rgba(57,255,136,.35); animation: pixIn .5s steps(6) backwards, mineGlow 2.4s steps(3) .6s infinite; }
+  .dl-card.mine:hover { box-shadow: 11px 11px 0 var(--black), 0 0 28px rgba(57,255,136,.5); border-color: var(--green); }
+  @keyframes mineGlow { 50% { box-shadow: 8px 8px 0 var(--black), 0 0 34px rgba(57,255,136,.55); } }
+  .dl-card .tag-mine { display: none; font-family: var(--pixel); font-size: 8px; color: var(--black); background: var(--green); padding: 4px 8px; }
+  .dl-card.mine .tag-mine { display: inline-block; animation: popIn .35s steps(4) .5s backwards; }
   .ios-share { display: inline-block; width: 18px; height: 22px; vertical-align: -4px; }
   .dl-note { color: var(--yellow); font-size: 19px; margin: 12px 0 0; }
-  @media (max-width: 1060px) { .dl-grid { grid-template-columns: 1fr 1fr; } }
-  @media (max-width: 880px) { .dl-grid { grid-template-columns: 1fr; } }
+  .dl-note:not(.hidden) { animation: pixIn .3s steps(4); }
+  @media (max-width: 1060px) { .dl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 880px) { .dl-grid { grid-template-columns: minmax(0, 1fr); } .dl-card.mine { order: -1; } }
 </style>
 </head>
 <body>
@@ -42,7 +54,7 @@
     <div class="pixel-card dl-card" id="cardWin">
       <div class="big-ico">⊞</div>
       <h2>WINDOWS <span class="tag-mine">SEU SISTEMA</span></h2>
-      <p style="color:var(--muted);margin:0 0 18px">Transmita e assista. Windows 10 e 11.</p>
+      <p class="desc">Transmita e assista. Windows 10 e 11.</p>
       <a class="btn primary big block" id="dlWin" href="https://github.com/leoaltoe-dot/taverna-na-combie/releases/latest/download/Taverna-na-Combie-Setup.exe">⬇ Baixar instalador</a>
       <ol>
         <li>Abra o arquivo baixado: ele instala e já abre o app.</li>
@@ -53,7 +65,7 @@
     <div class="pixel-card dl-card" id="cardAndroid">
       <div class="big-ico">▣</div>
       <h2>ANDROID <span class="tag-mine">SEU SISTEMA</span></h2>
-      <p style="color:var(--muted);margin:0 0 18px">Assista às transmissões com tela cheia e janela flutuante. Android 7 ou mais novo.</p>
+      <p class="desc">Assista às transmissões com tela cheia e janela flutuante. Android 7 ou mais novo.</p>
       <a class="btn primary big block" id="dlAndroid" href="https://github.com/leoaltoe-dot/taverna-na-combie/releases/latest/download/Taverna-na-Combie.apk">⬇ Baixar APK</a>
       <ol>
         <li>Abra o arquivo baixado e toque em <b>Instalar</b>.</li>
@@ -64,7 +76,7 @@
     <div class="pixel-card dl-card" id="cardIos">
       <div class="big-ico">▯</div>
       <h2>IPHONE E IPAD <span class="tag-mine">SEU SISTEMA</span></h2>
-      <p style="color:var(--muted);margin:0 0 18px">Assista às transmissões com ícone na tela de início e tela cheia. Funciona no Safari, sem App Store.</p>
+      <p class="desc">Assista às transmissões com ícone na tela de início e tela cheia. Funciona no Safari, sem App Store.</p>
       <button class="btn primary big block" id="dlIos" type="button">＋ Instalar no iPhone</button>
       <ol>
         <li>Abra <b>tavernanacombie.win</b> no <b>Safari</b>.</li>
@@ -80,26 +92,6 @@
   <span>Criado por <b>Leonardo Altoe</b></span>
   <a href="https://github.com/leoaltoe-dot" target="_blank" rel="noopener"><span aria-hidden="true">&lt;/&gt;</span> GitHub: leoaltoe-dot</a>
 </footer>
-<script>
-  const ua = navigator.userAgent;
-  const $ = (id) => document.getElementById(id);
-  const ios = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-  const standalone = navigator.standalone || matchMedia('(display-mode: standalone)').matches;
-  if (/TavernaApp/.test(ua) || window.tavernaApp || standalone) $('inApp').classList.remove('hidden');
-  if (ios) $('cardIos').classList.add('mine');
-  else if (/Android/i.test(ua)) $('cardAndroid').classList.add('mine');
-  else if (/Windows/i.test(ua)) $('cardWin').classList.add('mine');
-
-  function note(msg) { $('iosNote').textContent = msg; $('iosNote').classList.remove('hidden'); }
-  $('dlIos').addEventListener('click', () => {
-    if (!ios) {
-      note('Abra este site no iPhone ou iPad para instalar. Dica: aponte a câmera para o QR code de uma sala ou digite tavernanacombie.win no Safari.');
-      return;
-    }
-    if (standalone) { note('O app já está instalado. Abra pelo ícone da Kombi na tela de início.'); return; }
-    if (/CriOS|FxiOS|EdgiOS/.test(ua)) note('No Chrome/Firefox do iPhone também dá: toque em Compartilhar e depois em Adicionar à Tela de Início. Se não aparecer, abra no Safari.');
-    else note('Agora toque em Compartilhar na barra do Safari e escolha "Adicionar à Tela de Início".');
-  });
-</script>
+<script src="/baixar.js"></script>
 </body>
 </html>
