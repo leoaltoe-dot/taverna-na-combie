@@ -9,6 +9,9 @@ const { spawn } = require('child_process');
 const APP_NAME = 'Taverna na Combie';
 if (!app.requestSingleInstanceLock()) app.quit();
 app.setAppUserModelId('com.tavernanacombie.app');
+// Sem a moldura amarela do Windows durante a transmissão: em vez da captura "Windows.Graphics.Capture"
+// (que desenha a borda amarela), usa a captura clássica (DXGI para a tela; para janelas, recorta a tela).
+if (process.platform === 'win32') app.commandLine.appendSwitch('disable-features', 'AllowWgcScreenCapturer,AllowWgcWindowCapturer');
 
 let win = null;
 let selectedSourceId = null;
