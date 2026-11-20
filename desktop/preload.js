@@ -3,6 +3,12 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('tavernaApp', {
   isApp: true,
+  windowControls: {
+    minimize: () => ipcRenderer.send('win:minimize'),
+    toggleMaximize: () => ipcRenderer.send('win:toggle-maximize'),
+    close: () => ipcRenderer.send('win:close'),
+    onState: (cb) => { ipcRenderer.removeAllListeners('win:state'); ipcRenderer.on('win:state', (_e, s) => cb(s)); },
+  },
   version: ipcRenderer.sendSync('app:version'),
   installUpdate: (url) => ipcRenderer.invoke('app:install-update', url),
   onUpdateProgress: (cb) => { ipcRenderer.removeAllListeners('app:update-progress'); ipcRenderer.on('app:update-progress', (_e, p) => cb(p)); },

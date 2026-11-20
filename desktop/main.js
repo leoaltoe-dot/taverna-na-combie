@@ -43,6 +43,7 @@ function createWindow() {
     backgroundColor: '#12062a', title: APP_NAME,
     icon: path.join(__dirname, 'build', 'icon.png'),
     autoHideMenuBar: true, show: false,
+    frame: false, // barra de título própria, no visual da Taverna (desenhada pela página)
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true, nodeIntegration: false, sandbox: true,
@@ -51,6 +52,10 @@ function createWindow() {
   });
   Menu.setApplicationMenu(null);
   win.once('ready-to-show', () => win.show());
+  const sendState = () => { if (!win.isDestroyed()) win.webContents.send('win:state', { maximized: win.isMaximized() }); };
+  win.on('maximize', sendState);
+  win.on('unmaximize', sendState);
+  win.webContents.on('did-finish-load', sendState);
 
   // Entrega a tela escolhida no seletor da página ao getDisplayMedia.
   session.defaultSession.setDisplayMediaRequestHandler(async (_req, callback) => {
@@ -173,6 +178,9 @@ ipcMain.handle('app:get-sources', async () => {
 });
 ipcMain.handle('app:select-source', (_e, id, audio) => { selectedSourceId = id; selectedAudio = !!audio; return true; });
 ipcMain.handle('app:google-login', () => googleLogin());
+ipcMain.on('win:minimize', () => win && win.minimize());
+ipcMain.on('win:toggle-maximize', () => { if (win) win.isMaximized() ? win.unmaximize() : win.maximize(); });
+ipcMain.on('win:close', () => win && win.close());
 ipcMain.handle('app:install-update', (_e, url) => installUpdate(url));
 ipcMain.on('app:version', (e) => { e.returnValue = app.getVersion(); });
 ipcMain.handle('app:open-setup', () => loadSetup());
