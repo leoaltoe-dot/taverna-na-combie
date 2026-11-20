@@ -15,6 +15,11 @@ on:
 permissions:
   contents: write
 
+# Se sair outra mudança enquanto monta, cancela a montagem antiga (a versão nova é a que vale).
+concurrency:
+  group: apps
+  cancel-in-progress: true
+
 jobs:
   windows:
     runs-on: windows-latest
