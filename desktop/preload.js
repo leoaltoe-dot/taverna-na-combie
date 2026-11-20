@@ -20,6 +20,8 @@ contextBridge.exposeInMainWorld('tavernaApp', {
     stop: () => ipcRenderer.invoke('app:win-audio-stop'),
     onData: (cb) => { ipcRenderer.removeAllListeners('app:win-audio'); ipcRenderer.on('app:win-audio', (_e, chunk) => cb(chunk)); },
   },
+  // Modo gamer: Taverna com prioridade abaixo do normal (o jogo vem primeiro)
+  setGamer: (on) => ipcRenderer.invoke('app:gamer', !!on),
   googleLogin: () => ipcRenderer.invoke('app:google-login'),
   openSetup: () => ipcRenderer.invoke('app:open-setup'),
   getServer: () => ipcRenderer.invoke('app:get-server'),

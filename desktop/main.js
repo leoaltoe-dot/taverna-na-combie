@@ -237,6 +237,7 @@ function startWinAudio(wc) {
     let p;
     try { p = spawn(winAudioExe(), [m[1]], { stdio: ['pipe', 'pipe', 'ignore'], windowsHide: true }); } catch { return resolve(false); }
     winAudioProc = p;
+    if (gamerOn) { try { os.setPriority(p.pid, os.constants.priority.PRIORITY_BELOW_NORMAL); } catch {} }
     let rest = Buffer.alloc(0);
     p.stdout.on('data', (chunk) => {
       const buf = rest.length ? Buffer.concat([rest, chunk]) : chunk;
@@ -272,6 +273,16 @@ ipcMain.handle('app:select-source', (e, id, audio) => {
   return { ok: true, windowAudio: selectedAudio && selectedSourceId.startsWith('window:') && winAudioSupported() };
 });
 ipcMain.handle('app:win-audio-start', (e) => (fromSite(e) ? startWinAudio(e.sender) : false));
+// Modo gamer: todos os processos do Taverna (e o de som da janela) ficam com prioridade abaixo do normal,
+// assim o Windows dá preferência ao jogo quando o PC aperta.
+let gamerOn = false;
+function applyGamerPriority() {
+  const level = gamerOn ? os.constants.priority.PRIORITY_BELOW_NORMAL : os.constants.priority.PRIORITY_NORMAL;
+  const pids = app.getAppMetrics().map((m) => m.pid);
+  if (winAudioProc && winAudioProc.pid) pids.push(winAudioProc.pid);
+  for (const pid of pids) { try { os.setPriority(pid, level); } catch {} }
+}
+ipcMain.handle('app:gamer', (e, on) => { if (!fromSite(e)) return false; gamerOn = !!on; applyGamerPriority(); return true; });
 ipcMain.handle('app:win-audio-stop', (e) => { if (fromSite(e)) stopWinAudio(); return true; });
 ipcMain.handle('app:google-login', (e) => fromSite(e) && googleLogin());
 ipcMain.on('win:minimize', (e) => fromSite(e) && win && win.minimize());
